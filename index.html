@@ -82,7 +82,7 @@
       switch (train.status) {
         case "AT_ORIGIN": return `Na estação de origem: ${train.origin?.designation || '---'}`;
         case "IN_TRANSIT": return "Em viagem";
-        case "AT_STATION": return nomeEstacao ? `Na estação (${nomeEstacao})` : "Parado em estação";
+        case "AT_STATION": return nomeEstacao ? `Na estação (${nomeEstacao})` : "Parado na estação";
         case "AT_DESTINATION": return `Chegou ao destino: ${train.destination?.designation || '---'}`;
         case "CANCELLED": return "Cancelado";
         case "UNKNOWN": return "Estado desconhecido";
