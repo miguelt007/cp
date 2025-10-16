@@ -229,7 +229,6 @@
               <div><strong>Velocidade:</strong> ${train.speed != null ? train.speed + ' km/h' : '---'}</div>
               <div><strong>Atraso:</strong> ${atraso}</div>
               <div><strong>Estado:</strong> ${estado}</div>
-${train.status === "AT_STATION" ? `<div><strong>Estação atual:</strong> ${mapaEstacoes.get(train.lastStation || train.lastDependency) || '---'}</div>` : ""}
               <div style="font-size:11px; color:#999; text-align:right; margin-top:6px;">
                 Atualizado às ${horaAtual}
               </div>
