@@ -46,7 +46,6 @@
       maxZoom: 19
     }).addTo(map);
 
-    // Legenda como controlo Leaflet
     const legenda = L.control({ position: 'topright' });
 
     legenda.onAdd = function () {
@@ -106,28 +105,30 @@
               const cor = cores[tipoNormalizado] || cores["default"];
               const icon = criarIcone(cor);
 
+              const horaAtual = new Date().toLocaleTimeString("pt-PT", { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
               const marker = L.marker([train.latitude, train.longitude], { icon }).addTo(map);
-             marker.bindPopup(`
-    <div style="font-family:Arial, sans-serif; font-size:13px; line-height:1.4; max-width:250px;">
-    <div style="font-weight:bold; font-size:15px; color:#333;">Comboio ${train.trainNumber}</div>
-    <div style="font-weight:bold; font-size:14px; color:#555; margin-bottom:6px;">${train.service?.designation || 'Serviço desconhecido'}</div>
+              marker.bindPopup(`
+                <div style="font-family:Arial, sans-serif; font-size:13px; line-height:1.4; max-width:250px;">
+                  <div style="font-weight:bold; font-size:15px; color:#333;">Comboio ${train.trainNumber}</div>
+                  <div style="font-weight:bold; font-size:14px; color:#555; margin-bottom:6px;">${train.service?.designation || 'Serviço desconhecido'}</div>
 
-    <div style="margin-bottom:6px;">
-      <strong>Origem:</strong> ${train.origin?.designation || '---'}<br>
-      <strong>Destino:</strong> ${train.destination?.designation || '---'}
-    </div>
+                  <div style="margin-bottom:6px;">
+                    <strong>Origem:</strong> ${train.origin?.designation || '---'}<br>
+                    <strong>Destino:</strong> ${train.destination?.designation || '---'}
+                  </div>
 
-    <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
-      <div><strong>Velocidade:</strong><br>${train.speed} km/h</div>
-      <div><strong>Atraso:</strong><br>${train.delay} s</div>
-      <div><strong>Estado:</strong><br>${train.status}</div>
-    </div>
+                  <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+                    <div><strong>Velocidade:</strong><br>${train.speed} km/h</div>
+                    <div><strong>Atraso:</strong><br>${train.delay} s</div>
+                    <div><strong>Estado:</strong><br>${train.status}</div>
+                  </div>
 
-    <div style="font-size:11px; color:#999; text-align:right;">
-      Atualizado às ${train.lastUpdated || '--:--:--'}
-    </div>
-  </div>
-`);
+                  <div style="font-size:11px; color:#999; text-align:right;">
+                    Atualizado às ${horaAtual}
+                  </div>
+                </div>
+              `);
               markers.push(marker);
             }
           });
