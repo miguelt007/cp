@@ -134,6 +134,14 @@
       });
     }
 
+    fetch("api/stations.json")
+  .then(res => res.json())
+  .then(data => {
+    data.stations.forEach(estacao => {
+      mapaEstacoes.set(estacao.code, estacao.designation);
+    });
+  });
+
     fetch("https://miguelt007.github.io/cp/api/linhas-ferroviarias.json")
       .then(res => res.json())
       .then(data => {
@@ -221,9 +229,7 @@
               <div><strong>Velocidade:</strong> ${train.speed != null ? train.speed + ' km/h' : '---'}</div>
               <div><strong>Atraso:</strong> ${atraso}</div>
               <div><strong>Estado:</strong> ${estado}</div>
-${train.status === "AT_STATION" && mapaEstacoes.get(train.lastStation || train.lastDependency)
-  ? `<div><strong>Estação atual:</strong> ${mapaEstacoes.get(train.lastStation || train.lastDependency)}</div>`
-  : ""}
+${train.status === "AT_STATION" ? `<div><strong>Estação atual:</strong> ${mapaEstacoes.get(train.lastStation || train.lastDependency) || '---'}</div>` : ""}
               <div style="font-size:11px; color:#999; text-align:right; margin-top:6px;">
                 Atualizado às ${horaAtual}
               </div>
