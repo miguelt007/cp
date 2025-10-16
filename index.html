@@ -31,8 +31,6 @@
       <option value="regionais">Regionais</option>
       <option value="interregionais">InterRegionais</option>
       <option value="urbanos">Urbanos</option>
-      <option value="urbanos lisboa">Urbanos Lisboa</option>
-      <option value="urbanos porto">Urbanos Porto</option>
       <option value="outros">Outros</option>
     </select>
 
@@ -51,6 +49,39 @@
       subdomains: 'abcd',
       maxZoom: 19
     }).addTo(map);
+
+    const legenda = L.control({ position: 'bottomright' });
+    legenda.onAdd = function () {
+      const div = L.DomUtil.create('div', 'info legend');
+      div.style.background = '#222';
+      div.style.color = 'white';
+      div.style.padding = '10px';
+      div.style.fontFamily = 'sans-serif';
+      div.style.fontSize = '13px';
+      div.style.borderRadius = '6px';
+      div.innerHTML = '<strong>Serviços</strong><br>';
+
+      const tipos = {
+        "Alfa Pendular": "#00ff00",
+        "Intercidades": "#4CAF50",
+        "Regionais": "#2196F3",
+        "InterRegionais": "#212df3",
+        "Urbanos": "#FFEB3B",
+        "Outros": "#B0BEC5"
+      };
+
+      for (const [nome, cor] of Object.entries(tipos)) {
+        div.innerHTML += `
+          <div style="margin:4px 0;">
+            <span style="display:inline-block;width:12px;height:12px;background:${cor};margin-right:6px;border-radius:2px;"></span>
+            ${nome}
+          </div>
+        `;
+      }
+
+      return div;
+    };
+    legenda.addTo(map);
 
     let markers = [];
     let mapaEstacoes = new Map();
@@ -80,10 +111,10 @@
       const codigo = train.lastStation || train.lastDependency || null;
       const nomeEstacao = codigo ? mapaEstacoes.get(codigo) : null;
       switch (train.status) {
-        case "AT_ORIGIN": return `Na estação de origem: ${train.origin?.designation || '---'}`;
+        case "AT_ORIGIN": return `Na origem: ${train.origin?.designation || '---'}`;
         case "IN_TRANSIT": return "Em viagem";
-        case "AT_STATION": return nomeEstacao ? `Na estação (${nomeEstacao})` : "Parado na estação";
-        case "AT_DESTINATION": return `Chegou ao destino: ${train.destination?.designation || '---'}`;
+        case "AT_STATION": return nomeEstacao ? `Na estação (${nomeEstacao})` : "Parado em estação";
+        case "AT_DESTINATION": return `Chegou a destino: ${train.destination?.designation || '---'}`;
         case "CANCELLED": return "Cancelado";
         case "UNKNOWN": return "Estado desconhecido";
         default: return train.status || '---';
@@ -101,17 +132,16 @@
       });
     }
 
-    fetch("api/linhas-ferroviarias.json")
+    fetch("https://miguelt007.github.io/cp/api/linhas-ferroviarias.json")
       .then(res => res.json())
       .then(data => {
-        // Desenhar linhas ferroviárias reais
         L.geoJSON(data, {
           style: feature => {
             const cor = feature.properties.color || "#888";
             return { color: cor, weight: 2, opacity: 0.8 };
           },
           onEachFeature: (feature, layer) => {
-            const nome = feature.properties.designação || 'Linha';
+            const nome = feature.properties.designacao || 'Linha';
             const segmento = feature.properties.segmento || '';
             layer.bindTooltip(`${nome} – ${segmento}`, {
               permanent: false,
@@ -119,11 +149,10 @@
               offset: [0, -4]
             });
 
-            // Se for ponto, guardar como estação
             if (feature.geometry.type === "Point") {
               const props = feature.properties;
               const codigo = props.code || props.id || null;
-              const nomeEstacao = props.designação || null;
+              const nomeEstacao = props.designacao || null;
               if (codigo && nomeEstacao) {
                 mapaEstacoes.set(codigo, nomeEstacao);
               }
@@ -131,7 +160,6 @@
           }
         }).addTo(map);
 
-        // Iniciar comboios após carregar estações
         atualizarComboios();
         setInterval(atualizarComboios, 30000);
       });
@@ -168,7 +196,7 @@
         const correspondePesquisa =
           textoComboio.includes(textoPesquisa) ||
           origem.includes(textoPesquisa) ||
-          destino.includes(textoPesquisa) ||
+                    destino.includes(textoPesquisa) ||
           estacaoAtualLower.includes(textoPesquisa);
 
         if (correspondeTipo && correspondePesquisa && train.latitude && train.longitude) {
@@ -187,7 +215,7 @@
                 <strong>Serviço:</strong> ${train.service?.designation || '---'}
               </div>
               <div><strong>Origem:</strong> ${train.origin?.designation || '---'}</div>
-                            <div><strong>Destino:</strong> ${train.destination?.designation || '---'}</div>
+              <div><strong>Destino:</strong> ${train.destination?.designation || '---'}</div>
               <div><strong>Velocidade:</strong> ${train.speed != null ? train.speed + ' km/h' : '---'}</div>
               <div><strong>Atraso:</strong> ${atraso}</div>
               <div><strong>Estado:</strong> ${estado}</div>
