@@ -39,17 +39,22 @@
       });
     }
 
-    // Mapa de cores por serviço
-    const cores = {
-      "ALFA PENDULAR": "#00ff00",   // lima
-      "INTERCIDADES": "#4CAF50",    // verde
-      "REGIONAIS": "#2196F3",        // azul
-      "InterRegionais": "#212df3",        // azul
-      "Urbanos": "#FFEB3B",          // amarelo
-      "Urbanos Lisboa": "#FFEB3B",          // amarelo
-      "Urbanos Porto": "#FFEB3B",          // amarelo
-      "default": "#B0BEC5"          // cinzento
-    };
+    const tipoOriginal = train.service?.designation || "default";
+    const tipoNormalizado = tipoOriginal.trim().toLowerCase(); // remover espaços e tornar minúsculo
+
+// Mapa de cores com chaves normalizadas
+const cores = {
+  "alfa pendular": "#00ff00",     // lima
+  "intercidades": "#4CAF50",      // verde
+  "regionais": "#2196F3",         // azul
+  "interregionais": "#212df3",    // azul
+  "urbanos": "#FFEB3B",           // amarelo
+  "urbanos lisboa": "#FFEB3B",    // amarelo
+  "urbanos porto": "#FFEB3B",     // amarelo
+  "default": "#B0BEC5"            // cinzento
+};
+
+    const cor = cores[tipoNormalizado] || cores["default"];
 
     function atualizarComboios() {
       fetch("https://cp-iota-ten.vercel.app/api/comboios")
