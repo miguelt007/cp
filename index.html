@@ -27,11 +27,14 @@
     }).addTo(map);
 
     // Buscar dados dos comboios
-fetch("https://cp-iota-ten.vercel.app/api/comboios") // ou o domínio do teu projeto
+fetch("https://cp-iota-ten.vercel.app/api/comboios")
   .then(res => res.json())
   .then(data => {
-    console.log(data); // confirma que os dados chegam
-    data.forEach(train => {
+    console.log("Resposta recebida:", data);
+
+    const comboios = Array.isArray(data) ? data : data.vehicles || data.data || [];
+
+    comboios.forEach(train => {
       if (train.latitude && train.longitude) {
         const marker = L.marker([train.latitude, train.longitude]).addTo(map);
         marker.bindPopup(`
@@ -43,7 +46,8 @@ fetch("https://cp-iota-ten.vercel.app/api/comboios") // ou o domínio do teu pro
         `);
       }
     });
-  });
+  })
+  .catch(err => console.error("Erro ao buscar dados:", err));
 </script>
 </body>
 </html>
