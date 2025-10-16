@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<html lang="pt">
 <head>
   <meta charset="UTF-8">
   <title>Comboios em Tempo Real</title>
@@ -15,9 +16,8 @@
 
   <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
   <script>
-    // Inicializar mapa com tema escuro (CartoDB Dark Matter)
+    // Inicializar mapa com tema escuro
     const map = L.map('map').setView([39.5, -8.0], 7); // centro de Portugal
 
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
@@ -26,28 +26,40 @@
       maxZoom: 19
     }).addTo(map);
 
-    // Buscar dados dos comboios
-fetch("https://cp-iota-ten.vercel.app/api/comboios")
-  .then(res => res.json())
-  .then(data => {
-    console.log("Resposta recebida:", data);
+    let markers = [];
 
-    const comboios = Array.isArray(data) ? data : data.vehicles || data.data || [];
+    function atualizarComboios() {
+      fetch("https://cp-iota-ten.vercel.app/api/comboios")
+        .then(res => res.json())
+        .then(data => {
+          // Limpar marcadores anteriores
+          markers.forEach(m => map.removeLayer(m));
+          markers = [];
 
-    comboios.forEach(train => {
-      if (train.latitude && train.longitude) {
-        const marker = L.marker([train.latitude, train.longitude]).addTo(map);
-        marker.bindPopup(`
-          <strong>Comboio ${train.trainNumber}</strong><br>
-          Serviço: ${train.service?.designation || 'Desconhecido'}<br>
-          Estado: ${train.status}<br>
-          Velocidade: ${train.speed} km/h<br>
-          Atraso: ${train.delay} s
-        `);
-      }
-    });
-  })
-  .catch(err => console.error("Erro ao buscar dados:", err));
-</script>
+          const comboios = Array.isArray(data) ? data : data.vehicles || data.data || [];
+
+          comboios.forEach(train => {
+            if (train.latitude && train.longitude) {
+              const marker = L.marker([train.latitude, train.longitude]).addTo(map);
+              marker.bindPopup(`
+                <strong>Comboio ${train.trainNumber}</strong><br>
+                Serviço: ${train.service?.designation || 'Desconhecido'}<br>
+                Estado: ${train.status}<br>
+                Velocidade: ${train.speed} km/h<br>
+                Atraso: ${train.delay} s
+              `);
+              markers.push(marker);
+            }
+          });
+        })
+        .catch(err => console.error("Erro ao buscar dados:", err));
+    }
+
+    // Atualizar ao carregar
+    atualizarComboios();
+
+    // Atualizar a cada 30 segundos
+    setInterval(atualizarComboios, 30000);
+  </script>
 </body>
 </html>
