@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <title>Comboios em Tempo Real</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    body, html { margin: 0; padding: 0; height: 100%; }
+    #map { width: 100%; height: 100%; }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <script>
+    // Inicializar mapa com tema escuro (CartoDB Dark Matter)
+    const map = L.map('map').setView([39.5, -8.0], 7); // centro de Portugal
+
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; <a href="https://carto.com/">CARTO</a>',
+      subdomains: 'abcd',
+      maxZoom: 19
+    }).addTo(map);
+
+    // Buscar dados dos comboios
+    fetch("https://comboios.live/api/vehicles")
+      .then(res => res.json())
+      .then(data => {
+        data.forEach(train => {
+          if (train.latitude && train.longitude) {
+            const marker = L.marker([train.latitude, train.longitude]).addTo(map);
+            marker.bindPopup(`
+              <strong>Comboio ${train.trainNumber}</strong><br>
+              Serviço: ${train.service?.designation || 'Desconhecido'}<br>
+              Estado: ${train.status}<br>
+              Velocidade: ${train.speed} km/h<br>
+              Atraso: ${train.delay} s
+            `);
+          }
+        });
+      });
+  </script>
+</body>
+</html>
