@@ -8,6 +8,29 @@
   <style>
     body, html { margin: 0; padding: 0; height: 100%; }
     #map { width: 100%; height: 100%; }
+
+    .leaflet-control.legenda {
+      background: rgba(0,0,0,0.7);
+      color: white;
+      padding: 10px;
+      border-radius: 6px;
+      font-family: sans-serif;
+      font-size: 14px;
+    }
+
+    .legenda-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .legenda-bola {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      margin-right: 8px;
+      border: 1px solid white;
+    }
   </style>
 </head>
 <body>
@@ -23,9 +46,26 @@
       maxZoom: 19
     }).addTo(map);
 
+    // Legenda como controlo Leaflet
+    const legenda = L.control({ position: 'topright' });
+
+    legenda.onAdd = function () {
+      const div = L.DomUtil.create('div', 'leaflet-control legenda');
+      div.innerHTML = `
+        <div class="legenda-item"><div class="legenda-bola" style="background:#00ff00"></div> ALFA PENDULAR</div>
+        <div class="legenda-item"><div class="legenda-bola" style="background:#4CAF50"></div> INTERCIDADES</div>
+        <div class="legenda-item"><div class="legenda-bola" style="background:#2196F3"></div> REGIONAIS</div>
+        <div class="legenda-item"><div class="legenda-bola" style="background:#212df3"></div> InterRegionais</div>
+        <div class="legenda-item"><div class="legenda-bola" style="background:#FFEB3B"></div> Urbanos</div>
+        <div class="legenda-item"><div class="legenda-bola" style="background:#B0BEC5"></div> Outros</div>
+      `;
+      return div;
+    };
+
+    legenda.addTo(map);
+
     let markers = [];
 
-    // Função para gerar ícone circular colorido
     function criarIcone(corHex) {
       const svg = `
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24">
@@ -39,16 +79,15 @@
       });
     }
 
-    // Mapa de cores com chaves normalizadas (minúsculas)
     const cores = {
-      "alfa pendular": "#00ff00",     // lima
-      "intercidades": "#4CAF50",      // verde
-      "regionais": "#2196F3",         // azul
-      "interregionais": "#212df3",    // azul
-      "urbanos": "#FFEB3B",           // amarelo
-      "urbanos lisboa": "#FFEB3B",    // amarelo
-      "urbanos porto": "#FFEB3B",     // amarelo
-      "default": "#B0BEC5"            // cinzento
+      "alfa pendular": "#00ff00",
+      "intercidades": "#4CAF50",
+      "regionais": "#2196F3",
+      "interregionais": "#212df3",
+      "urbanos": "#FFEB3B",
+      "urbanos lisboa": "#FFEB3B",
+      "urbanos porto": "#FFEB3B",
+      "default": "#B0BEC5"
     };
 
     function atualizarComboios() {
