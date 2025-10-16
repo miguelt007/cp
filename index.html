@@ -31,6 +31,8 @@
       <option value="regionais">Regionais</option>
       <option value="interregionais">InterRegionais</option>
       <option value="urbanos">Urbanos</option>
+      <option value="urbanos lisboa">Urbanos Lisboa</option>
+      <option value="urbanos porto">Urbanos Porto</option>
       <option value="outros">Outros</option>
     </select>
 
@@ -111,10 +113,10 @@
       const codigo = train.lastStation || train.lastDependency || null;
       const nomeEstacao = codigo ? mapaEstacoes.get(codigo) : null;
       switch (train.status) {
-        case "AT_ORIGIN": return `Na origem: ${train.origin?.designation || '---'}`;
+        case "AT_ORIGIN": return `Na estação de origem: ${train.origin?.designation || '---'}`;
         case "IN_TRANSIT": return "Em viagem";
-        case "AT_STATION": return nomeEstacao ? `Na estação (${nomeEstacao})` : "Parado em estação";
-        case "AT_DESTINATION": return `Chegou a destino: ${train.destination?.designation || '---'}`;
+        case "AT_STATION": return nomeEstacao ? `Na estação (${nomeEstacao})` : "Parado na estação";
+        case "AT_DESTINATION": return `Chegou ao destino: ${train.destination?.designation || '---'}`;
         case "CANCELLED": return "Cancelado";
         case "UNKNOWN": return "Estado desconhecido";
         default: return train.status || '---';
