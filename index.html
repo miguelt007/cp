@@ -107,13 +107,15 @@
               const icon = criarIcone(cor);
 
               const marker = L.marker([train.latitude, train.longitude], { icon }).addTo(map);
-              marker.bindPopup(`
-                <strong>Comboio ${train.trainNumber}</strong><br>
-                Serviço: ${train.service?.designation || 'Desconhecido'}<br>
-                Estado: ${train.status}<br>
-                Velocidade: ${train.speed} km/h<br>
-                Atraso: ${train.delay} s
-              `);
+             marker.bindPopup(`
+  <strong>Comboio ${train.trainNumber}</strong><br>
+  Serviço: ${train.service?.designation || 'Desconhecido'}<br>
+  Origem: ${train.origin?.designation || '---'}<br>
+  Destino: ${train.destination?.designation || '---'}<br>
+  Estado: ${train.status}<br>
+  Velocidade: ${train.speed} km/h<br>
+  Atraso: ${train.delay} s
+`);
               markers.push(marker);
             }
           });
