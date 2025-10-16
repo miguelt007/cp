@@ -28,22 +28,23 @@
     }).addTo(map);
 
     // Buscar dados dos comboios
-    fetch("https://comboios.live/api/vehicles")
-      .then(res => res.json())
-      .then(data => {
-        data.forEach(train => {
-          if (train.latitude && train.longitude) {
-            const marker = L.marker([train.latitude, train.longitude]).addTo(map);
-            marker.bindPopup(`
-              <strong>Comboio ${train.trainNumber}</strong><br>
-              Serviço: ${train.service?.designation || 'Desconhecido'}<br>
-              Estado: ${train.status}<br>
-              Velocidade: ${train.speed} km/h<br>
-              Atraso: ${train.delay} s
-            `);
-          }
-        });
-      });
-  </script>
+    fetch("https://cp-iota-ten.vercel.app/") // ou o domínio do teu projeto
+  .then(res => res.json())
+  .then(data => {
+    console.log(data); // confirma que os dados chegam
+    data.forEach(train => {
+      if (train.latitude && train.longitude) {
+        const marker = L.marker([train.latitude, train.longitude]).addTo(map);
+        marker.bindPopup(`
+          <strong>Comboio ${train.trainNumber}</strong><br>
+          Serviço: ${train.service?.designation || 'Desconhecido'}<br>
+          Estado: ${train.status}<br>
+          Velocidade: ${train.speed} km/h<br>
+          Atraso: ${train.delay} s
+        `);
+      }
+    });
+  });
+</script>
 </body>
 </html>
