@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
     body, html { margin: 0; padding: 0; height: 100%; }
-    #map { width: 100%; height: 100%; }
+    #map { width: 100%; height: calc(100% - 50px); }
 
     .leaflet-control.legenda {
       background: rgba(0,0,0,0.7);
@@ -31,9 +31,38 @@
       margin-right: 8px;
       border: 1px solid white;
     }
+
+    #filtros {
+      padding: 10px;
+      background: #222;
+      color: white;
+      font-family: sans-serif;
+    }
+
+    #filtros select, #filtros input {
+      margin-right: 20px;
+      padding: 4px;
+      font-size: 14px;
+    }
   </style>
 </head>
 <body>
+  <div id="filtros">
+    <label for="servico">Tipo de Serviço:</label>
+    <select id="servico" onchange="filtrarComboios()">
+      <option value="todos">Todos</option>
+      <option value="alfa pendular">Alfa Pendular</option>
+      <option value="intercidades">Intercidades</option>
+      <option value="regionais">Regionais</option>
+      <option value="interregionais">InterRegionais</option>
+      <option value="urbanos">Urbanos</option>
+      <option value="outros">Outros</option>
+    </select>
+
+    <label for="pesquisa">Pesquisa:</label>
+    <input type="text" id="pesquisa" oninput="filtrarComboios()" placeholder="Comboio, origem, destino...">
+  </div>
+
   <div id="map"></div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -65,30 +94,7 @@
 
     let markers = [];
     let mapaEstacoes = new Map();
-
-    // Carregar estações
-    fetch("https://comboios.live/api/stations")
-      .then(res => res.json())
-      .then(data => {
-        data.stations.forEach(estacao => {
-          mapaEstacoes.set(estacao.code, estacao.designation);
-        });
-        atualizarComboios();
-        setInterval(atualizarComboios, 30000);
-      });
-
-    function criarIcone(corHex) {
-      const svg = `
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24">
-          <circle cx="12" cy="12" r="8" fill="${corHex}" stroke="white" stroke-width="1"/>
-        </svg>
-      `;
-      return L.icon({
-        iconUrl: "data:image/svg+xml;base64," + btoa(svg),
-        iconSize: [24, 24],
-        iconAnchor: [12, 12]
-      });
-    }
+    let comboiosAtuais = [];
 
     const cores = {
       "alfa pendular": "#00ff00",
@@ -100,6 +106,16 @@
       "urbanos porto": "#FFEB3B",
       "default": "#B0BEC5"
     };
+
+    fetch("https://comboios.live/api/stations")
+      .then(res => res.json())
+      .then(data => {
+        data.stations.forEach(estacao => {
+          mapaEstacoes.set(estacao.code, estacao.designation);
+        });
+        atualizarComboios();
+        setInterval(atualizarComboios, 30000);
+      });
 
     function estadoLegivel(train) {
       const codigo = train.lastStation || train.lastDependency || null;
@@ -123,48 +139,63 @@
       }
     }
 
+    function criarIcone(corHex) {
+      const svg = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24">
+          <circle cx="12" cy="12" r="8" fill="${corHex}" stroke="white" stroke-width="1"/>
+        </svg>
+      `;
+      return L.icon({
+        iconUrl: "data:image/svg+xml;base64," + btoa(svg),
+        iconSize: [24, 24],
+        iconAnchor: [12, 12]
+      });
+    }
+
     function atualizarComboios() {
       fetch("https://cp-iota-ten.vercel.app/api/comboios")
         .then(res => res.json())
         .then(data => {
-          markers.forEach(m => map.removeLayer(m));
-          markers = [];
-
-          const comboios = Array.isArray(data) ? data : data.vehicles || data.data || [];
-
-          comboios.forEach(train => {
-            if (train.latitude && train.longitude) {
-              const tipoOriginal = train.service?.designation || "default";
-              const tipoNormalizado = tipoOriginal.trim().toLowerCase();
-              const cor = cores[tipoNormalizado] || cores["default"];
-              const icon = criarIcone(cor);
-              const horaAtual = new Date().toLocaleTimeString("pt-PT", { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-
-              const marker = L.marker([train.latitude, train.longitude], { icon }).addTo(map);
-              marker.bindPopup(`
-                <div style="font-family:Arial, sans-serif; font-size:13px; line-height:1.6; max-width:250px;">
-                  <div style="background:#FF9800; color:#000; padding:4px 6px; border-radius:4px; display:inline-block; margin-bottom:6px;">
-                    <strong>Comboio:</strong> ${train.trainNumber || '---'}
-                  </div>
-                  <div style="background:${cor}; color:#000; padding:4px 6px; border-radius:4px; display:inline-block; margin-bottom:6px;">
-                    <strong>Serviço:</strong> ${train.service?.designation || '---'}
-                  </div>
-                  <div><strong>Origem:</strong> ${train.origin?.designation || '---'}</div>
-                  <div><strong>Destino:</strong> ${train.destination?.designation || '---'}</div>
-                  <div><strong>Velocidade:</strong> ${train.speed != null ? train.speed + ' km/h' : '---'}</div>
-                  <div><strong>Atraso:</strong> ${train.delay != null ? train.delay + ' s' : '---'}</div>
-                  <div><strong>Estado:</strong> ${estadoLegivel(train)}</div>
-                  <div style="font-size:11px; color:#999; text-align:right; margin-top:6px;">
-                    Atualizado às ${horaAtual}
-                  </div>
-                </div>
-              `);
-              markers.push(marker);
-            }
-          });
+          comboiosAtuais = Array.isArray(data) ? data : data.vehicles || data.data || [];
+          filtrarComboios();
         })
         .catch(err => console.error("Erro ao buscar dados:", err));
     }
-  </script>
-</body>
-</html>
+
+    function filtrarComboios() {
+      markers.forEach(m => map.removeLayer(m));
+      markers = [];
+
+      const tipoSelecionado = document.getElementById("servico").value;
+      const textoPesquisa = document.getElementById("pesquisa").value.toLowerCase();
+
+      comboiosAtuais.forEach(train => {
+        const tipoOriginal = train.service?.designation || "Outros";
+        const tipoNormalizado = tipoOriginal.trim().toLowerCase();
+        const cor = cores[tipoNormalizado] || cores["default"];
+
+        const origem = train.origin?.designation?.toLowerCase() || '';
+        const destino = train.destination?.designation?.toLowerCase() || '';
+        const estacaoAtual = mapaEstacoes.get(train.lastStation || train.lastDependency) || '';
+        const estacaoAtualLower = estacaoAtual.toLowerCase();
+        const textoComboio = `${train.trainNumber}`.toLowerCase();
+
+        const correspondeTipo = tipoSelecionado === "todos" || tipoNormalizado === tipoSelecionado;
+        const correspondePesquisa =
+          textoComboio.includes(textoPesquisa) ||
+          origem.includes(textoPesquisa) ||
+          destino.includes(textoPesquisa) ||
+          estacaoAtualLower.includes(textoPesquisa);
+
+        if (correspondeTipo && correspondePesquisa && train.latitude && train.longitude) {
+          const icon = criarIcone(cor);
+          const horaAtual = new Date().toLocaleTimeString("pt-PT", { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+          const estado = estadoLegivel(train);
+
+          const marker = L.marker([train.latitude, train.longitude], { icon }).addTo(map);
+          marker.bindPopup(`
+            <div style="font-family:Arial, sans-serif; font-size:13px; line-height:1.6; max-width:250px;">
+              <div style="background:#FF9800; color:#000; padding:4px 6px; border-radius:4px; display:inline-block; margin-bottom:6px;">
+                <strong>Comboio:</strong> ${train.trainNumber || '---'}
+              </div>
+              <div style="background:${cor}; color:#
