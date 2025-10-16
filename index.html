@@ -110,8 +110,8 @@
               const marker = L.marker([train.latitude, train.longitude], { icon }).addTo(map);
               marker.bindPopup(`
     <div style="font-family:Arial, sans-serif; font-size:13px; line-height:1.6; max-width:250px;">
-    <div><strong>Comboio:</strong> ${train.trainNumber || '---'}</div>
-    <div><strong>Serviço:</strong> ${train.service?.designation || '---'}</div>
+    <div><strong>Comboio:</strong> {{ ${train.trainNumber || '---'} }}</div>
+    <div><strong>Serviço:</strong> <span style="color:${cor}">{{ ${train.service?.designation || '---'} }}</span></div>
     <div><strong>Origem:</strong> ${train.origin?.designation || '---'}</div>
     <div><strong>Destino:</strong> ${train.destination?.designation || '---'}</div>
     <div><strong>Velocidade:</strong> ${train.speed != null ? train.speed + ' km/h' : '---'}</div>
