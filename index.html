@@ -25,33 +25,27 @@
 
     let markers = [];
 
-    // Definir ícones por tipo de serviço
-    const icons = {
-      "ALFA PENDULAR": L.icon({
-        iconUrl: "https://cdn-icons-png.flaticon.com/512/190/190411.png",
+    // Função para gerar ícone circular colorido
+    function criarIcone(corHex) {
+      const svg = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24">
+          <circle cx="12" cy="12" r="8" fill="${corHex}" stroke="white" stroke-width="1"/>
+        </svg>
+      `;
+      return L.icon({
+        iconUrl: "data:image/svg+xml;base64," + btoa(svg),
         iconSize: [24, 24],
         iconAnchor: [12, 12]
-      }),
-      "INTERCIDADES": L.icon({
-        iconUrl: "https://cdn-icons-png.flaticon.com/512/190/190406.png",
-        iconSize: [24, 24],
-        iconAnchor: [12, 12]
-      }),
-      "REGIONAL": L.icon({
-        iconUrl: "https://cdn-icons-png.flaticon.com/512/190/190416.png",
-        iconSize: [24, 24],
-        iconAnchor: [12, 12]
-      }),
-      "URBANO": L.icon({
-        iconUrl: "https://cdn-icons-png.flaticon.com/512/190/190423.png",
-        iconSize: [24, 24],
-        iconAnchor: [12, 12]
-      }),
-      "default": L.icon({
-        iconUrl: "https://cdn-icons-png.flaticon.com/512/190/190422.png",
-        iconSize: [24, 24],
-        iconAnchor: [12, 12]
-      })
+      });
+    }
+
+    // Mapa de cores por serviço
+    const cores = {
+      "ALFA PENDULAR": "#C7EA46",   // lima
+      "INTERCIDADES": "#4CAF50",    // verde
+      "REGIONAL": "#2196F3",        // azul
+      "URBANO": "#FFEB3B",          // amarelo
+      "default": "#B0BEC5"          // cinzento
     };
 
     function atualizarComboios() {
@@ -66,7 +60,8 @@
           comboios.forEach(train => {
             if (train.latitude && train.longitude) {
               const tipo = train.service?.designation?.toUpperCase() || "default";
-              const icon = icons[tipo] || icons["default"];
+              const cor = cores[tipo] || cores["default"];
+              const icon = criarIcone(cor);
 
               const marker = L.marker([train.latitude, train.longitude], { icon }).addTo(map);
               marker.bindPopup(`
