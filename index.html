@@ -64,6 +64,18 @@
     legenda.addTo(map);
 
     let markers = [];
+    let mapaEstacoes = new Map();
+
+    // Carregar estações
+    fetch("https://comboios.live/api/stations")
+      .then(res => res.json())
+      .then(data => {
+        data.stations.forEach(estacao => {
+          mapaEstacoes.set(estacao.code, estacao.designation);
+        });
+        atualizarComboios();
+        setInterval(atualizarComboios, 30000);
+      });
 
     function criarIcone(corHex) {
       const svg = `
@@ -89,17 +101,27 @@
       "default": "#B0BEC5"
     };
 
-    const estadosLegiveis = {
-  "AT_ORIGIN": (train) => `Na estação de origem: ${train.origin?.designation || '---'}`,
-  "IN_TRANSIT": () => "Em viagem",
-  "AT_STATION": (train) => {
-    const estacao = train.currentStop?.designation || null;
-    return estacao ? `Na estação (${estacao})` : "Parado na estação";
-  },
-  "AT_DESTINATION": (train) => `Chegou ao destino: ${train.destination?.designation || '---'}`,
-  "CANCELLED": () => "Cancelado",
-  "UNKNOWN": () => "Estado desconhecido"
-};
+    function estadoLegivel(train) {
+      const codigo = train.lastStation || train.lastDependency || null;
+      const nomeEstacao = codigo ? mapaEstacoes.get(codigo) : null;
+
+      switch (train.status) {
+        case "AT_ORIGIN":
+          return `Na estação de origem: ${train.origin?.designation || '---'}`;
+        case "IN_TRANSIT":
+          return "Em viagem";
+        case "AT_STATION":
+          return nomeEstacao ? `Na estação (${nomeEstacao})` : "Parado em estação";
+        case "AT_DESTINATION":
+          return `Chegou ao destino: ${train.destination?.designation || '---'}`;
+        case "CANCELLED":
+          return "Cancelado";
+        case "UNKNOWN":
+          return "Estado desconhecido";
+        default:
+          return train.status || '---';
+      }
+    }
 
     function atualizarComboios() {
       fetch("https://cp-iota-ten.vercel.app/api/comboios")
@@ -117,7 +139,6 @@
               const cor = cores[tipoNormalizado] || cores["default"];
               const icon = criarIcone(cor);
               const horaAtual = new Date().toLocaleTimeString("pt-PT", { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-              const estadoLegivel = estadosLegiveis[train.status]?.(train) || train.status || '---';
 
               const marker = L.marker([train.latitude, train.longitude], { icon }).addTo(map);
               marker.bindPopup(`
@@ -132,7 +153,7 @@
                   <div><strong>Destino:</strong> ${train.destination?.designation || '---'}</div>
                   <div><strong>Velocidade:</strong> ${train.speed != null ? train.speed + ' km/h' : '---'}</div>
                   <div><strong>Atraso:</strong> ${train.delay != null ? train.delay + ' s' : '---'}</div>
-                  <div><strong>Estado:</strong> ${estadoLegivel}</div>
+                  <div><strong>Estado:</strong> ${estadoLegivel(train)}</div>
                   <div style="font-size:11px; color:#999; text-align:right; margin-top:6px;">
                     Atualizado às ${horaAtual}
                   </div>
@@ -144,9 +165,6 @@
         })
         .catch(err => console.error("Erro ao buscar dados:", err));
     }
-
-    atualizarComboios();
-    setInterval(atualizarComboios, 30000);
   </script>
 </body>
 </html>
