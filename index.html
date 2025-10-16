@@ -109,26 +109,19 @@
 
               const marker = L.marker([train.latitude, train.longitude], { icon }).addTo(map);
               marker.bindPopup(`
-                <div style="font-family:Arial, sans-serif; font-size:13px; line-height:1.4; max-width:250px;">
-                  <div style="font-weight:bold; font-size:15px; color:#333;">Comboio ${train.trainNumber}</div>
-                  <div style="font-weight:bold; font-size:14px; color:#555; margin-bottom:6px;">${train.service?.designation || 'Serviço desconhecido'}</div>
-
-                  <div style="margin-bottom:6px;">
-                    <strong>Origem:</strong> ${train.origin?.designation || '---'}<br>
-                    <strong>Destino:</strong> ${train.destination?.designation || '---'}
-                  </div>
-
-                  <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
-                    <div><strong>Velocidade:</strong><br>${train.speed} km/h</div>
-                    <div><strong>Atraso:</strong><br>${train.delay} s</div>
-                    <div><strong>Estado:</strong><br>${train.status}</div>
-                  </div>
-
-                  <div style="font-size:11px; color:#999; text-align:right;">
-                    Atualizado às ${horaAtual}
-                  </div>
-                </div>
-              `);
+    <div style="font-family:Arial, sans-serif; font-size:13px; line-height:1.6; max-width:250px;">
+    <div><strong>Comboio:</strong> ${train.trainNumber || '---'}</div>
+    <div><strong>Serviço:</strong> ${train.service?.designation || '---'}</div>
+    <div><strong>Origem:</strong> ${train.origin?.designation || '---'}</div>
+    <div><strong>Destino:</strong> ${train.destination?.designation || '---'}</div>
+    <div><strong>Velocidade:</strong> ${train.speed != null ? train.speed + ' km/h' : '---'}</div>
+    <div><strong>Atraso:</strong> ${train.delay != null ? train.delay + ' s' : '---'}</div>
+    <div><strong>Estado:</strong> ${train.status || '---'}</div>
+    <div style="font-size:11px; color:#999; text-align:right; margin-top:6px;">
+      Atualizado às ${new Date().toLocaleTimeString("pt-PT", { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+    </div>
+  </div>
+`);
               markers.push(marker);
             }
           });
