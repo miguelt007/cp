@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <title>Comboios em Tempo Real</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- Leaflet CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
     body, html { margin: 0; padding: 0; height: 100%; }
@@ -14,11 +13,9 @@
 <body>
   <div id="map"></div>
 
-  <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
-    // Inicializar mapa com tema escuro
-    const map = L.map('map').setView([39.5, -8.0], 7); // centro de Portugal
+    const map = L.map('map').setView([39.5, -8.0], 7);
 
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
       attribution: '&copy; <a href="https://carto.com/">CARTO</a>',
@@ -28,11 +25,39 @@
 
     let markers = [];
 
+    // Definir ícones por tipo de serviço
+    const icons = {
+      "ALFA PENDULAR": L.icon({
+        iconUrl: "https://cdn-icons-png.flaticon.com/512/190/190411.png",
+        iconSize: [24, 24],
+        iconAnchor: [12, 12]
+      }),
+      "INTERCIDADES": L.icon({
+        iconUrl: "https://cdn-icons-png.flaticon.com/512/190/190406.png",
+        iconSize: [24, 24],
+        iconAnchor: [12, 12]
+      }),
+      "REGIONAL": L.icon({
+        iconUrl: "https://cdn-icons-png.flaticon.com/512/190/190416.png",
+        iconSize: [24, 24],
+        iconAnchor: [12, 12]
+      }),
+      "URBANO": L.icon({
+        iconUrl: "https://cdn-icons-png.flaticon.com/512/190/190423.png",
+        iconSize: [24, 24],
+        iconAnchor: [12, 12]
+      }),
+      "default": L.icon({
+        iconUrl: "https://cdn-icons-png.flaticon.com/512/190/190422.png",
+        iconSize: [24, 24],
+        iconAnchor: [12, 12]
+      })
+    };
+
     function atualizarComboios() {
       fetch("https://cp-iota-ten.vercel.app/api/comboios")
         .then(res => res.json())
         .then(data => {
-          // Limpar marcadores anteriores
           markers.forEach(m => map.removeLayer(m));
           markers = [];
 
@@ -40,7 +65,10 @@
 
           comboios.forEach(train => {
             if (train.latitude && train.longitude) {
-              const marker = L.marker([train.latitude, train.longitude]).addTo(map);
+              const tipo = train.service?.designation?.toUpperCase() || "default";
+              const icon = icons[tipo] || icons["default"];
+
+              const marker = L.marker([train.latitude, train.longitude], { icon }).addTo(map);
               marker.bindPopup(`
                 <strong>Comboio ${train.trainNumber}</strong><br>
                 Serviço: ${train.service?.designation || 'Desconhecido'}<br>
@@ -55,10 +83,7 @@
         .catch(err => console.error("Erro ao buscar dados:", err));
     }
 
-    // Atualizar ao carregar
     atualizarComboios();
-
-    // Atualizar a cada 30 segundos
     setInterval(atualizarComboios, 30000);
   </script>
 </body>
