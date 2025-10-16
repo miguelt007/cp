@@ -39,22 +39,17 @@
       });
     }
 
-    const tipoOriginal = train.service?.designation || "default";
-    const tipoNormalizado = tipoOriginal.trim().toLowerCase(); // remover espaços e tornar minúsculo
-
-// Mapa de cores com chaves normalizadas
-const cores = {
-  "alfa pendular": "#00ff00",     // lima
-  "intercidades": "#4CAF50",      // verde
-  "regionais": "#2196F3",         // azul
-  "interregionais": "#212df3",    // azul
-  "urbanos": "#FFEB3B",           // amarelo
-  "urbanos lisboa": "#FFEB3B",    // amarelo
-  "urbanos porto": "#FFEB3B",     // amarelo
-  "default": "#B0BEC5"            // cinzento
-};
-
-    const cor = cores[tipoNormalizado] || cores["default"];
+    // Mapa de cores com chaves normalizadas (minúsculas)
+    const cores = {
+      "alfa pendular": "#00ff00",     // lima
+      "intercidades": "#4CAF50",      // verde
+      "regionais": "#2196F3",         // azul
+      "interregionais": "#212df3",    // azul
+      "urbanos": "#FFEB3B",           // amarelo
+      "urbanos lisboa": "#FFEB3B",    // amarelo
+      "urbanos porto": "#FFEB3B",     // amarelo
+      "default": "#B0BEC5"            // cinzento
+    };
 
     function atualizarComboios() {
       fetch("https://cp-iota-ten.vercel.app/api/comboios")
@@ -67,8 +62,9 @@ const cores = {
 
           comboios.forEach(train => {
             if (train.latitude && train.longitude) {
-              const tipo = train.service?.designation?.toUpperCase() || "default";
-              const cor = cores[tipo] || cores["default"];
+              const tipoOriginal = train.service?.designation || "default";
+              const tipoNormalizado = tipoOriginal.trim().toLowerCase();
+              const cor = cores[tipoNormalizado] || cores["default"];
               const icon = criarIcone(cor);
 
               const marker = L.marker([train.latitude, train.longitude], { icon }).addTo(map);
