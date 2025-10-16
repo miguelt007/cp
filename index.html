@@ -92,8 +92,8 @@
     const estadosLegiveis = {
       "AT_ORIGIN": (train) => `Na origem: ${train.origin?.designation || '---'}`,
       "IN_TRANSIT": () => "Em viagem",
-      "AT_STATION": () => "Parado em estação",
-      "AT_DESTINATION": (train) => `Chegou a destino: ${train.destination?.designation || '---'}`,
+      "AT_STATION": () => "Parado na estação",
+      "AT_DESTINATION": (train) => `Chegou ao destino: ${train.destination?.designation || '---'}`,
       "CANCELLED": () => "Cancelado",
       "UNKNOWN": () => "Estado desconhecido"
     };
