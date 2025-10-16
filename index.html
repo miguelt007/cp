@@ -8,37 +8,12 @@
   <style>
     body, html { margin: 0; padding: 0; height: 100%; }
     #map { width: 100%; height: calc(100% - 50px); }
-
-    .leaflet-control.legenda {
-      background: rgba(0,0,0,0.7);
-      color: white;
-      padding: 10px;
-      border-radius: 6px;
-      font-family: sans-serif;
-      font-size: 14px;
-    }
-
-    .legenda-item {
-      display: flex;
-      align-items: center;
-      margin-bottom: 6px;
-    }
-
-    .legenda-bola {
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      margin-right: 8px;
-      border: 1px solid white;
-    }
-
     #filtros {
       padding: 10px;
       background: #222;
       color: white;
       font-family: sans-serif;
     }
-
     #filtros select, #filtros input {
       margin-right: 20px;
       padding: 4px;
@@ -77,23 +52,6 @@
       maxZoom: 19
     }).addTo(map);
 
-    const legenda = L.control({ position: 'topright' });
-
-    legenda.onAdd = function () {
-      const div = L.DomUtil.create('div', 'leaflet-control legenda');
-      div.innerHTML = `
-        <div class="legenda-item"><div class="legenda-bola" style="background:#00ff00"></div> ALFA PENDULAR</div>
-        <div class="legenda-item"><div class="legenda-bola" style="background:#4CAF50"></div> INTERCIDADES</div>
-        <div class="legenda-item"><div class="legenda-bola" style="background:#2196F3"></div> REGIONAIS</div>
-        <div class="legenda-item"><div class="legenda-bola" style="background:#212df3"></div> InterRegionais</div>
-        <div class="legenda-item"><div class="legenda-bola" style="background:#FFEB3B"></div> Urbanos</div>
-        <div class="legenda-item"><div class="legenda-bola" style="background:#B0BEC5"></div> Outros</div>
-      `;
-      return div;
-    };
-
-    legenda.addTo(map);
-
     let markers = [];
     let mapaEstacoes = new Map();
     let comboiosAtuais = [];
@@ -108,16 +66,6 @@
       "urbanos porto": "#FFEB3B",
       "default": "#B0BEC5"
     };
-
-    fetch("https://comboios.live/api/stations")
-      .then(res => res.json())
-      .then(data => {
-        data.stations.forEach(estacao => {
-          mapaEstacoes.set(estacao.code, estacao.designation);
-        });
-        atualizarComboios();
-        setInterval(atualizarComboios, 30000);
-      });
 
     function formatarAtraso(segundos) {
       if (segundos == null || isNaN(segundos)) return '---';
@@ -152,6 +100,41 @@
         iconAnchor: [12, 12]
       });
     }
+
+    fetch("api/linhas-ferroviarias.geojson")
+      .then(res => res.json())
+      .then(data => {
+        // Desenhar linhas ferroviárias reais
+        L.geoJSON(data, {
+          style: feature => {
+            const cor = feature.properties.color || "#888";
+            return { color: cor, weight: 2, opacity: 0.8 };
+          },
+          onEachFeature: (feature, layer) => {
+            const nome = feature.properties.designação || 'Linha';
+            const segmento = feature.properties.segmento || '';
+            layer.bindTooltip(`${nome} – ${segmento}`, {
+              permanent: false,
+              direction: 'top',
+              offset: [0, -4]
+            });
+
+            // Se for ponto, guardar como estação
+            if (feature.geometry.type === "Point") {
+              const props = feature.properties;
+              const codigo = props.code || props.id || null;
+              const nomeEstacao = props.designação || null;
+              if (codigo && nomeEstacao) {
+                mapaEstacoes.set(codigo, nomeEstacao);
+              }
+            }
+          }
+        }).addTo(map);
+
+        // Iniciar comboios após carregar estações
+        atualizarComboios();
+        setInterval(atualizarComboios, 30000);
+      });
 
     function atualizarComboios() {
       fetch("https://cp-iota-ten.vercel.app/api/comboios")
@@ -195,24 +178,24 @@
           const atraso = formatarAtraso(train.delay);
 
           const marker = L.marker([train.latitude, train.longitude], { icon }).addTo(map);
-         marker.bindPopup(`
-    <div style="font-family:Arial, sans-serif; font-size:13px; line-height:1.6; max-width:250px;">
-    <div style="background:#FF9800; color:#000; padding:4px 6px; border-radius:4px; display:inline-block; margin-bottom:6px;">
-      <strong>Comboio:</strong> ${train.trainNumber || '---'}
-    </div>
-    <div style="background:${cor}; color:#000; padding:4px 6px; border-radius:4px; display:inline-block; margin-bottom:6px;">
-      <strong>Serviço:</strong> ${train.service?.designation || '---'}
-    </div>
-    <div><strong>Origem:</strong> ${train.origin?.designation || '---'}</div>
-    <div><strong>Destino:</strong> ${train.destination?.designation || '---'}</div>
-    <div><strong>Velocidade:</strong> ${train.speed != null ? train.speed + ' km/h' : '---'}</div>
-    <div><strong>Atraso:</strong> ${atraso}</div>
-    <div><strong>Estado:</strong> ${estado}</div>
-    <div style="font-size:11px; color:#999; text-align:right; margin-top:6px;">
-      Atualizado às ${horaAtual}
-    </div>
-  </div>
-`);
+          marker.bindPopup(`
+            <div style="font-family:Arial, sans-serif; font-size:13px; line-height:1.6; max-width:250px;">
+              <div style="background:#FF9800; color:#000; padding:4px 6px; border-radius:4px; display:inline-block; margin-bottom:6px;">
+                <strong>Comboio:</strong> ${train.trainNumber || '---'}
+              </div>
+              <div style="background:${cor}; color:#000; padding:4px 6px; border-radius:4px; display:inline-block; margin-bottom:6px;">
+                <strong>Serviço:</strong> ${train.service?.designation || '---'}
+              </div>
+              <div><strong>Origem:</strong> ${train.origin?.designation || '---'}</div>
+                            <div><strong>Destino:</strong> ${train.destination?.designation || '---'}</div>
+              <div><strong>Velocidade:</strong> ${train.speed != null ? train.speed + ' km/h' : '---'}</div>
+              <div><strong>Atraso:</strong> ${atraso}</div>
+              <div><strong>Estado:</strong> ${estado}</div>
+              <div style="font-size:11px; color:#999; text-align:right; margin-top:6px;">
+                Atualizado às ${horaAtual}
+              </div>
+            </div>
+          `);
           markers.push(marker);
         }
       });
